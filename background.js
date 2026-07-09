@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 chrome.tabs.sendMessage(sender.tab.id, {
                     type: 'analysisResult',
                     stage: request.stage,
-                    content: 'ERROR: API Key not set. Please set it in the extension popup.'
+                    content: 'Error: API Key not set. Please click the CodeBuddy icon and save your Gemini API key.'
                 });
                 return;
             }
@@ -58,7 +58,15 @@ async function callGeminiAPI(problem, stage, apiKey, tabId) {
                 chrome.tabs.sendMessage(tabId, {
                     type: 'analysisResult',
                     stage: stage,
-                    content: 'You have exceeded the daily request limit for this model. Please try again tomorrow.'
+                    content: 'Error: You have exceeded the request limit for this model. Please wait a moment and retry.'
+                });
+                return;
+            }
+            if (response.status === 400) {
+                chrome.tabs.sendMessage(tabId, {
+                    type: 'analysisResult',
+                    stage: stage,
+                    content: 'Error: The request was rejected (400). Your API key may be invalid — re-check it in the popup.'
                 });
                 return;
             }
@@ -153,7 +161,7 @@ function generatePrompt(problem, stage) {
                                         - Add only **1-2 important comments**, no over commenting.
                                         - Use good variable names.
                                         - After code, write **a short 3-step explanation**.
-                                        ✅ Format the code in a markdown block \`\`\`js
+                                        ✅ Format the code in a markdown block \`\`\`java
                                     `;
         case 'complexity':
             return baseInstruction + `  ### ⏱ Complexity (Time & Space)

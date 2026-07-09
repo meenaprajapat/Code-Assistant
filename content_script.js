@@ -7,16 +7,44 @@ let panel;
 function main() {
     if (isUIRunning) return;
 
-    // find area to inject button
-    const targetArea = document.querySelector('div.flex.items-center.gap-4');
-    if (targetArea) {
-        const analyzeBtn = document.createElement('button');
-        analyzeBtn.textContent = 'Analyze Problem';
-        analyzeBtn.id = 'analyze-btn';
-        analyzeBtn.onclick = togglePanel;
-        targetArea.appendChild(analyzeBtn);
+    // Only run on an actual problem page.
+    if (!window.location.href.includes('/problems/')) return;
 
-        // inject panel
+    const analyzeBtn = document.createElement('button');
+    analyzeBtn.textContent = 'Analyze Problem';
+    analyzeBtn.id = 'analyze-btn';
+    analyzeBtn.onclick = togglePanel;
+
+    // Try several known toolbar locations; LeetCode changes these class names often.
+    const targetSelectors = [
+        'div.flex.items-center.gap-4',
+        'div.flex.items-center.gap-3',
+        'div.flex.items-center.gap-2',
+        'div[class*="Header"]'
+    ];
+    let targetArea = null;
+    for (const selector of targetSelectors) {
+        targetArea = document.querySelector(selector);
+        if (targetArea) break;
+    }
+
+    if (targetArea) {
+        targetArea.appendChild(analyzeBtn);
+    } else {
+        // Fallback: float the button so the demo always works even if
+        // LeetCode's toolbar layout changed and no anchor was found.
+        analyzeBtn.style.position = 'fixed';
+        analyzeBtn.style.top = '80px';
+        analyzeBtn.style.right = '20px';
+        analyzeBtn.style.zIndex = '10001';
+        document.body.appendChild(analyzeBtn);
+    }
+
+    // inject panel (only once — reuse it if it already exists from a prior page)
+    const existingPanel = document.getElementById('panel');
+    if (existingPanel) {
+        panel = existingPanel;
+    } else {
         fetch(chrome.runtime.getURL('panel.html'))
             .then(response => response.text())
             .then(html => {
@@ -24,9 +52,9 @@ function main() {
                 panel = document.getElementById('panel');
                 setupPanelBtn();
             }).catch(err => console.error('Failed to load panel HTML:', err));
-
-        isUIRunning = true;
     }
+
+    isUIRunning = true;
 }
 
 // toggle panel
@@ -194,10 +222,12 @@ function formatMarkdown(text) {
 }
 
 
-// detect changes in the page
+// detect changes in the page (LeetCode is a single-page app — navigating
+// between problems doesn't reload, so we re-inject when the button is gone).
 const detect = new MutationObserver((mutations) => {
     if (window.location.href.includes('/problems/') && !document.getElementById('analyze-btn')) {
-        // delay for load completely
+        // Button is missing on a problem page — allow re-injection.
+        isUIRunning = false;
         setTimeout(main, 1000);
     }
 });

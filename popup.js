@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('saveKey');
     const statusDiv = document.getElementById('status');
     const closeButton = document.getElementById('close-btn');
+    const toggleKey = document.getElementById('toggleKey');
+
+    // show/hide the API key
+    toggleKey.addEventListener('change', function () {
+        apiKeyInput.type = toggleKey.checked ? 'text' : 'password';
+    });
 
     // check for API Key
     chrome.storage.sync.get(['geminiApiKey'], function (result) {
@@ -21,7 +27,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // save API Key
     saveButton.addEventListener('click', function () {
         const apiKey = apiKeyInput.value.trim();
-        
+
+        if (apiKey && !apiKey.startsWith('AIza')) {
+            statusDiv.textContent = 'That does not look like a Gemini key (should start with "AIza").';
+            statusDiv.style.color = '#e0a500';
+            return;
+        }
+
         if (apiKey) {
             // Save the key to Chrome's synchronized storage
             chrome.storage.sync.set({ 'geminiApiKey': apiKey }, function () {

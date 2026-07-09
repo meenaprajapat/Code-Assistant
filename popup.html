@@ -37,14 +37,36 @@
             font-weight: 500;
             color: #ccc;
         }
-        input[type="password"] {
+        input[type="password"],
+        input[type="text"] {
             width: 95%;
             padding: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             border: 1px solid #555;
             border-radius: 4px;
             background-color: #3c3c3c;
             color: white;
+        }
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .row label {
+            margin: 0;
+            font-weight: 400;
+            font-size: 13px;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .row a {
+            font-size: 13px;
+            color: #4da3ff;
+            text-decoration: none;
+        }
+        .row a:hover {
+            text-decoration: underline;
         }
         #saveKey {
             width: 100%;
@@ -75,6 +97,12 @@
         Your Gemini API Key:
     </label>
     <input type="password" id="apiKey" placeholder="Enter your key here" />
+
+    <div class="row">
+        <label><input type="checkbox" id="toggleKey" /> Show key</label>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key ↗</a>
+    </div>
+
     <button id="saveKey">
         Save Key
     </button>

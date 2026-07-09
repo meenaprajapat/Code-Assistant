@@ -92,6 +92,49 @@ Code-Assistant/
 
 ---
 
+## 🏗️ Architecture
+
+The extension is built on the three standard Manifest V3 pieces, which communicate by message passing:
+
+```
+ LeetCode page                    Extension (isolated)
+┌────────────────────┐          ┌──────────────────────────┐
+│  content_script.js │          │      background.js        │
+│  • injects button  │  message │   (service worker)        │
+│  • builds panel UI ├─────────►│  • reads API key from     │
+│  • scrapes title & │          │    chrome.storage.sync    │
+│    description     │◄─────────┤  • calls Gemini API       │
+│  • renders result  │  message │  • retries on 503         │
+└────────────────────┘          └──────────────────────────┘
+        ▲
+        │ saves key
+┌───────┴────────────┐
+│  popup.html/.js    │  ← toolbar popup to store the Gemini key
+└────────────────────┘
+```
+
+**Why this split?** Content scripts can touch the page's DOM but are blocked from making cross-origin API calls with the key; the service worker can call the API but can't see the page. Message passing (`chrome.runtime.sendMessage` / `chrome.tabs.sendMessage`) bridges the two. This is the standard, secure MV3 pattern.
+
+**Robustness built in:**
+- Button injection tries several toolbar selectors and falls back to a floating button, so a LeetCode layout change won't hide it.
+- Re-injects itself when you navigate between problems (LeetCode is a single-page app).
+- Retries the API on transient `503`s; shows clear, actionable messages (with a **Retry** button) for missing keys, bad keys, and rate limits.
+
+---
+
+## 🩹 Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| "Analyze Problem" button missing | Refresh the problem page; check the extension is enabled at `chrome://extensions`. |
+| "API Key not set" in the panel | Click the CodeBuddy icon and save your Gemini key. |
+| "request was rejected (400)" | Your key is likely invalid — re-copy it from Google AI Studio. |
+| Rate-limit message | Wait a minute and click **Retry** (free tier has limits). |
+
+After editing any file, go to `chrome://extensions` and click the **reload** ↻ icon on the CodeBuddy card.
+
+---
+
 ## 👩‍💻 Author
 
 Made by **Meena Prajapat** ❤️✌️
