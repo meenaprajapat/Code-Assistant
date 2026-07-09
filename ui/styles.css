@@ -221,3 +221,28 @@
     margin-top: 10px;
     margin-bottom: 15px;
 }
+
+/* -------- Demo Mode banner (blockquote) -------- */
+.content-box blockquote {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    background-color: #33280d;
+    border-left: 4px solid #ffb020;
+    border-radius: 4px;
+    color: #ffdca0;
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+.content-box blockquote strong {
+    color: #ffce6b;
+}
+
+/* -------- Links inside generated content -------- */
+.content-box a {
+    color: #4da3ff;
+    font-weight: 600;
+    text-decoration: none;
+}
+.content-box a:hover {
+    text-decoration: underline;
+}

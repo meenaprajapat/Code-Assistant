@@ -9,6 +9,32 @@ Powered by Google's **Gemini API**.
 
 ---
 
+## 🎥 Demo
+
+> **See it in action below.** Open any LeetCode problem, click **Analyze Problem**,
+> and reveal each step — hints, approach, pseudo-code, solution, complexity — powered by live AI.
+> Setup takes ~30 seconds with a **free** Gemini key (instructions below).
+
+<!-- 📌 TODO: add a short demo GIF/video and screenshots here. See "Add your own demo" below. -->
+
+<!--
+![CodeBuddy demo](docs/demo.gif)
+![Hints panel](docs/screenshot-hints.png)
+![Solution panel](docs/screenshot-solution.png)
+-->
+
+<details>
+<summary><b>How to add your own demo GIF (2 min, free)</b></summary>
+
+1. Record your screen using it (Windows: **Xbox Game Bar** — press `Win + G`; or [ScreenToGif](https://www.screentogif.com/), free).
+2. Save the file as `docs/demo.gif` in this repo.
+3. Uncomment the `![CodeBuddy demo](docs/demo.gif)` line above.
+4. Commit & push — GitHub renders it automatically at the top of the README.
+
+</details>
+
+---
+
 ## ✨ Features
 
 - **💡 Initial Hints** — nudges you in the right direction without spoiling the solution.
@@ -75,20 +101,33 @@ The **CodeBuddy** icon will appear in your Chrome toolbar.
 
 ```
 Code-Assistant/
-├── manifest.json        # Extension config (Manifest V3)
-├── background.js        # Service worker — calls the Gemini API
-├── content_script.js   # Injected into LeetCode pages — builds the UI
-├── panel.html          # The slide-in learning panel
-├── popup.html          # Toolbar popup for saving the API key
-├── popup.js            # Popup logic (save/load key)
-├── styles.css          # Styling for the panel & button
-└── icons/              # Extension icon
+├── manifest.json              # Extension config (Manifest V3) — must stay at root
+├── README.md
+├── DEMO.md                    # Interview demo guide
+│
+├── src/                       # Source code, grouped by role
+│   ├── background/
+│   │   └── background.js      # Service worker — calls the Gemini API
+│   ├── content/
+│   │   └── content_script.js  # Injected into LeetCode pages — builds the UI
+│   └── popup/
+│       ├── popup.html         # Toolbar popup for the API key
+│       └── popup.js           # Popup logic (save / load / remove key)
+│
+├── ui/                        # Injected UI + styles
+│   ├── panel.html             # The slide-in learning panel
+│   └── styles.css             # Styling for the panel & button
+│
+└── assets/
+    └── icons/
+        └── logo5.png          # Extension icon
 ```
 
 ## 🔐 How it works
 
 - Your Gemini API key is stored **locally** in Chrome's `storage.sync` — it never leaves your browser except to call Google's Gemini API directly.
 - When you click a section, the content script reads the problem title & description from the page and sends it to the background worker, which asks Gemini for that specific step.
+- If no key is set, the panel shows a clear prompt to add one (no confusing placeholder answers) — once you save a key, every problem is analyzed live.
 
 ---
 
@@ -137,4 +176,4 @@ After editing any file, go to `chrome://extensions` and click the **reload** ↻
 
 ## 👩‍💻 Author
 
-Made by **Meena Prajapat** ❤️✌️
+Made by **Meena** ❤️✌️

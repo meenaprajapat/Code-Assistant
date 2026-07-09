@@ -45,7 +45,7 @@ function main() {
     if (existingPanel) {
         panel = existingPanel;
     } else {
-        fetch(chrome.runtime.getURL('panel.html'))
+        fetch(chrome.runtime.getURL('ui/panel.html'))
             .then(response => response.text())
             .then(html => {
                 document.body.insertAdjacentHTML('beforeend', html);
@@ -197,8 +197,16 @@ function formatMarkdown(text) {
     Text = Text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     Text = Text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
+    // Blockquote
+    Text = Text.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+    Text = Text.replace(/<\/blockquote>\s*<blockquote>/g, ' ');
+
     // Bold text
     Text = Text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Markdown links: [text](url) → clickable link (opens in new tab)
+    Text = Text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
     // Unordered list (grouped)
     Text = Text.replace(/(?:^|\n)[*-] (.*?)(?=\n|$)/g, (_, item) => `<li>${item}</li>`);
@@ -212,7 +220,7 @@ function formatMarkdown(text) {
 
     // Paragraphs
     Text = Text.split('\n').map(p => {
-        if (p.trim() === '' || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') || p.startsWith('<pre')) {
+        if (p.trim() === '' || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') || p.startsWith('<pre') || p.startsWith('<blockquote')) {
             return p;
         }
         return `<p>${p}</p>`;

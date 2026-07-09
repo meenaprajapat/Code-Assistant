@@ -70,42 +70,129 @@
         }
         #saveKey {
             width: 100%;
-            padding: 6px;
+            padding: 9px;
             border: none;
             border-radius: 6px;
             background-color: #007bff;
             color: white;
             font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
         }
         #saveKey:hover {
             background-color: #0056b3;
         }
+        #removeKey {
+            display: none;
+            width: 100%;
+            margin-top: 8px;
+            padding: 7px;
+            border: 1px solid #6b2a30;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #e08088;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #removeKey:hover {
+            background-color: #3a1c1f;
+            color: #ff9aa2;
+        }
+        #removeKey.show { display: block; }
         #status {
             margin-top: 10px;
             text-align: center;
             font-weight: 500;
+            min-height: 18px;
+            line-height: 1.5;
         }
+        #status a {
+            color: #4da3ff;
+            font-weight: 600;
+        }
+        /* --- onboarding banner (shown until a key is saved) --- */
+        #onboarding {
+            background-color: #1f2d3d;
+            border: 1px solid #2f4864;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd7e6;
+        }
+        #onboarding .title {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        #onboarding ol {
+            margin: 0;
+            padding-left: 18px;
+        }
+        #onboarding a {
+            color: #4da3ff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        #onboarding a:hover { text-decoration: underline; }
+        #get-key-btn {
+            display: inline-block;
+            margin: 8px 0 2px;
+            padding: 7px 12px;
+            background: linear-gradient(to right, #f7971e, #ffd200);
+            color: #1a1a1a;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+        .saved-badge {
+            display: none;
+            background-color: #14331d;
+            border: 1px solid #1f6b34;
+            color: #7ee2a0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        .saved-badge.show { display: block; }
     </style>
 </head>
 
 <body>
     <button id="close-btn">&times;</button>
-    <h3>LeetCode Assistant Settings</h3>
-    <label for="apiKey">
-        Your Gemini API Key:
-    </label>
-    <input type="password" id="apiKey" placeholder="Enter your key here" />
+    <h3>CodeBuddy Setup</h3>
+
+    <!-- Shown to first-time users until they save a key -->
+    <div id="onboarding">
+        <div class="title">One-time setup (free, ~30 sec)</div>
+        <ol>
+            <li>Click <b>Get free API key</b> below &amp; sign in with Google.</li>
+            <li>Click <b>Create API key</b>, then copy it.</li>
+            <li>Paste it below &amp; hit <b>Save Key</b>. Done! 🎉</li>
+        </ol>
+        <a id="get-key-btn" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔑 Get free API key ↗</a>
+    </div>
+
+    <!-- Shown once a key is already saved -->
+    <div id="saved-badge" class="saved-badge">
+        ✅ You're all set! Open any LeetCode problem and click <b>Analyze Problem</b>.
+    </div>
+
+    <label for="apiKey">Your Gemini API Key:</label>
+    <input type="password" id="apiKey" placeholder="Paste your key here (starts with AIza...)" />
 
     <div class="row">
         <label><input type="checkbox" id="toggleKey" /> Show key</label>
         <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key ↗</a>
     </div>
 
-    <button id="saveKey">
-        Save Key
-    </button>
+    <button id="saveKey">Save Key</button>
+    <button id="removeKey" title="Remove your saved API key">Remove key</button>
 
     <div id="status"></div>
     <script src="popup.js"></script>
