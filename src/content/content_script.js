@@ -7,54 +7,26 @@ let panel;
 function main() {
     if (isUIRunning) return;
 
-    // Only run on an actual problem page.
-    if (!window.location.href.includes('/problems/')) return;
-
-    const analyzeBtn = document.createElement('button');
-    analyzeBtn.textContent = 'Analyze Problem';
-    analyzeBtn.id = 'analyze-btn';
-    analyzeBtn.onclick = togglePanel;
-
-    // Try several known toolbar locations; LeetCode changes these class names often.
-    const targetSelectors = [
-        'div.flex.items-center.gap-4',
-        'div.flex.items-center.gap-3',
-        'div.flex.items-center.gap-2',
-        'div[class*="Header"]'
-    ];
-    let targetArea = null;
-    for (const selector of targetSelectors) {
-        targetArea = document.querySelector(selector);
-        if (targetArea) break;
-    }
-
+    // find area to inject button
+    const targetArea = document.querySelector('div.flex.items-center.gap-4');
     if (targetArea) {
+        const analyzeBtn = document.createElement('button');
+        analyzeBtn.textContent = 'Analyze Problem';
+        analyzeBtn.id = 'analyze-btn';
+        analyzeBtn.onclick = togglePanel;
         targetArea.appendChild(analyzeBtn);
-    } else {
-        // Fallback: float the button so the demo always works even if
-        // LeetCode's toolbar layout changed and no anchor was found.
-        analyzeBtn.style.position = 'fixed';
-        analyzeBtn.style.top = '80px';
-        analyzeBtn.style.right = '20px';
-        analyzeBtn.style.zIndex = '10001';
-        document.body.appendChild(analyzeBtn);
-    }
 
-    // inject panel (only once — reuse it if it already exists from a prior page)
-    const existingPanel = document.getElementById('panel');
-    if (existingPanel) {
-        panel = existingPanel;
-    } else {
-        fetch(chrome.runtime.getURL('ui/panel.html'))
+        // inject panel
+        fetch(chrome.runtime.getURL('panel.html'))
             .then(response => response.text())
             .then(html => {
                 document.body.insertAdjacentHTML('beforeend', html);
                 panel = document.getElementById('panel');
                 setupPanelBtn();
             }).catch(err => console.error('Failed to load panel HTML:', err));
-    }
 
-    isUIRunning = true;
+        isUIRunning = true;
+    }
 }
 
 // toggle panel
@@ -197,16 +169,8 @@ function formatMarkdown(text) {
     Text = Text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     Text = Text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
-    // Blockquote
-    Text = Text.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
-    Text = Text.replace(/<\/blockquote>\s*<blockquote>/g, ' ');
-
     // Bold text
     Text = Text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Markdown links: [text](url) → clickable link (opens in new tab)
-    Text = Text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-        '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
     // Unordered list (grouped)
     Text = Text.replace(/(?:^|\n)[*-] (.*?)(?=\n|$)/g, (_, item) => `<li>${item}</li>`);
@@ -220,7 +184,7 @@ function formatMarkdown(text) {
 
     // Paragraphs
     Text = Text.split('\n').map(p => {
-        if (p.trim() === '' || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') || p.startsWith('<pre') || p.startsWith('<blockquote')) {
+        if (p.trim() === '' || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') || p.startsWith('<pre')) {
             return p;
         }
         return `<p>${p}</p>`;
@@ -230,12 +194,10 @@ function formatMarkdown(text) {
 }
 
 
-// detect changes in the page (LeetCode is a single-page app — navigating
-// between problems doesn't reload, so we re-inject when the button is gone).
+// detect changes in the page
 const detect = new MutationObserver((mutations) => {
     if (window.location.href.includes('/problems/') && !document.getElementById('analyze-btn')) {
-        // Button is missing on a problem page — allow re-injection.
-        isUIRunning = false;
+        // delay for load completely
         setTimeout(main, 1000);
     }
 });
