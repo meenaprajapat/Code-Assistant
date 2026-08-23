@@ -6,12 +6,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         
         chrome.storage.sync.get(['geminiApiKey'], function (result) {
             if (!result.geminiApiKey) {
-                // No key set: show a clear, friendly prompt to add one.
-                // (No fake sample — that only causes confusion.)
                 chrome.tabs.sendMessage(sender.tab.id, {
                     type: 'analysisResult',
                     stage: request.stage,
-                    content: NO_KEY_MESSAGE
+                    content: 'ERROR: API Key not set. Please set it in the extension popup.'
                 });
                 return;
             }
@@ -26,21 +24,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-
-// Shown when no API key is set. A clear prompt to add a key — no fake sample,
-// so the panel never shows an answer for the wrong problem.
-const NO_KEY_MESSAGE = `### 🔑 Add your free API key to begin
-
-CodeBuddy uses Google's Gemini AI to analyze **this** problem live.
-
-1. Open [**Google AI Studio → Create API key**](https://aistudio.google.com/app/apikey), sign in, and click **Create API key**. Copy it.
-2. Click the **CodeBuddy** icon 🧩 in the Chrome toolbar (top-right).
-3. Paste your key, hit **Save Key**, then click a section here again.
-
-👉 Get your key now: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-
-It's **free** and takes about 30 seconds. Your key stays private in your browser.`;
 
 // --- Gemini API Call ---
 async function callGeminiAPI(problem, stage, apiKey, tabId) {
@@ -71,21 +54,19 @@ async function callGeminiAPI(problem, stage, apiKey, tabId) {
 
 
             // Errors:
-            if (response.status === 400) {
+            if (response.status === 429) {
                 chrome.tabs.sendMessage(tabId, {
                     type: 'analysisResult',
                     stage: stage,
-                    content: 'Error: The request was rejected (400). Your API key may be invalid — re-check it in the popup.'
+                    content: 'You have exceeded the daily request limit for this model. Please try again tomorrow.'
                 });
                 return;
             }
-            // 503 (server busy) and 429 (rate limit) are transient — back off and retry.
-            if (response.status === 503 || response.status === 429) {
-                lastError = new Error(`Temporary error (${response.status}). Server busy or rate-limited.`);
+            if (response.status === 503) {
+                lastError = new Error(`Service Unavailable (503). The server might be temporarily overloaded.`);
                 if (attempt < maxRetries) {
-                    const waitMs = attempt * 4000; // 4s, 8s, 12s...
-                    console.warn(`Attempt ${attempt} got ${response.status}. Retrying in ${waitMs / 1000}s...`);
-                    await sleep(waitMs);
+                    console.warn(`Attempt ${attempt} failed. Retrying in 2 seconds...`);
+                    await sleep(2000);
                     continue;
                 }
             }
@@ -118,14 +99,10 @@ async function callGeminiAPI(problem, stage, apiKey, tabId) {
         }
     }
 
-    // All retries used up. Give a friendly, actionable message.
-    const msg = /429|rate|503|busy/i.test(lastError.message)
-        ? 'Error: Google\'s free tier is busy or rate-limited right now. Wait ~1 minute and click Retry (one section at a time).'
-        : `Error: Couldn't get a response. ${lastError.message}`;
     chrome.tabs.sendMessage(tabId, {
         type: 'analysisResult',
         stage: stage,
-        content: msg
+        content: `Error: Failed to get analysis after ${maxRetries} attempts. ${lastError.message}`
     });
 }
 
@@ -176,7 +153,7 @@ function generatePrompt(problem, stage) {
                                         - Add only **1-2 important comments**, no over commenting.
                                         - Use good variable names.
                                         - After code, write **a short 3-step explanation**.
-                                        ✅ Format the code in a markdown block \`\`\`java
+                                        ✅ Format the code in a markdown block \`\`\`js
                                     `;
         case 'complexity':
             return baseInstruction + `  ### ⏱ Complexity (Time & Space)
